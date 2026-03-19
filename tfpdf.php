@@ -1379,8 +1379,10 @@ class tFPDF
 
     protected function _loadfont(string $font): array
     {
-        // Load a font definition file from the font directory
-        if (str_contains($font, '/') || str_contains($font, '\\')) {
+        // Load a font definition file from the font directory.
+        // Restrict font filenames to safe characters (alphanumeric, hyphen, underscore)
+        // with a required .php extension to prevent path traversal or LFI.
+        if (!preg_match('/\A[a-zA-Z0-9_\-]+\.php\z/', $font)) {
             $this->Error('Incorrect font definition file name: '.$font);
         }
         include($this->fontpath.$font);
