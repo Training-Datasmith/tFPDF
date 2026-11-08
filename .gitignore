@@ -1,2 +1,4 @@
 font/unifont/*.*.*
 vendor
+.phpunit.cache
+composer.phar

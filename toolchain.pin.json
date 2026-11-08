@@ -1,0 +1,9 @@
+{
+    "php_min_library": "5.0",
+    "php_runner": "8.3.6",
+    "phpunit": "11.5.57",
+    "phpunit_major": "11",
+    "extensions_required": ["mbstring", "zlib", "xml", "zip"],
+    "extensions_optional": ["gd"],
+    "services": []
+}
