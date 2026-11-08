@@ -1,10 +1,8 @@
 <?php
 
-declare(strict_types=1);
-
-final class DocumentBuilder
+class DocumentBuilder
 {
-    public static function coreOnePager(string $text = 'Test'): string
+    public static function coreOnePager($text = 'Test')
     {
         $pdf = new tFPDF();
         $pdf->AddPage();

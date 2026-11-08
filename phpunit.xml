@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Settings reference only; run-suite.sh passes bootstrap and test paths on the CLI (PHPUnit 4.8). -->
+<phpunit colors="false"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true">
+</phpunit>

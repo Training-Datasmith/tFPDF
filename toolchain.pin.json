@@ -1,9 +1,10 @@
 {
     "php_min_library": "5.0",
-    "php_runner": "8.3.6",
-    "phpunit": "11.5.57",
-    "phpunit_major": "11",
-    "extensions_required": ["mbstring", "zlib", "xml", "zip"],
-    "extensions_optional": ["gd"],
+    "php_runner_image": "docker.io/library/php:5.6.40-cli",
+    "php_runner_digest": "sha256:6ce95208609dc66df163ab936c970b3b34cd901b85c747102c5999f08ade9143",
+    "phpunit_phar_version": "4.8.36",
+    "phpunit_phar_sha256": "ab8bc3017a64cf75a2112f5e089a1d5b0c4cc2116556d60c1af5e3f584e85c5e",
+    "phpunit_phar_signing_key_fingerprint": "D8406D0D82947747293778314AA394086372C20A",
+    "runner_script": "tests/run-suite.sh",
     "services": []
 }

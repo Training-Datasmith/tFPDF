@@ -1,30 +1,36 @@
 <?php
 
-declare(strict_types=1);
-
-use PHPUnit\Framework\TestCase;
-
-abstract class TfpdfTestCase extends TestCase
+class TfpdfTestCase extends PHPUnit_Framework_TestCase
 {
-    protected function tearDown(): void
+    protected function tearDown()
     {
-        $patterns = [
+        $patterns = array(
             dirname(__DIR__) . '/font/unifont/*.mtx.php',
             dirname(__DIR__) . '/font/unifont/*.cw.dat',
             dirname(__DIR__) . '/font/unifont/*.cw127.php',
-        ];
+        );
         foreach ($patterns as $pattern) {
-            foreach (glob($pattern) ?: [] as $file) {
+            foreach (glob($pattern) ?: array() as $file) {
                 @unlink($file);
             }
         }
         parent::tearDown();
     }
 
-    protected function repoPath(string $relative = ''): string
+    protected function repoPath($relative = '')
     {
         $root = dirname(__DIR__);
 
         return $relative === '' ? $root : $root . '/' . ltrim($relative, '/');
+    }
+
+    protected function assertContainsString($needle, $haystack, $message = '')
+    {
+        $this->assertContains($needle, $haystack, $message);
+    }
+
+    protected function assertNotContainsString($needle, $haystack, $message = '')
+    {
+        $this->assertNotContains($needle, $haystack, $message);
     }
 }

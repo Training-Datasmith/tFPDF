@@ -1,10 +1,8 @@
 <?php
 
-declare(strict_types=1);
-
-final class OutputAndMetadataTest extends TfpdfTestCase
+class OutputAndMetadataTest extends TfpdfTestCase
 {
-    public function testOutputStringLeavesNoPrintedBody(): void
+    public function testOutputStringLeavesNoPrintedBody()
     {
         $pdf = new tFPDF();
         $pdf->AddPage();
@@ -12,10 +10,10 @@ final class OutputAndMetadataTest extends TfpdfTestCase
         $pdf->Cell(0, 10, 's');
         $bytes = $pdf->Output('S');
         PdfAssert::assertPdf($bytes);
-        $this->assertIsString($bytes);
+        $this->assertTrue(is_string($bytes));
     }
 
-    public function testOutputWritesFileDestination(): void
+    public function testOutputWritesFileDestination()
     {
         $path = sys_get_temp_dir() . '/tfpdf-out-' . uniqid('', true) . '.pdf';
         $pdf = new tFPDF();
@@ -25,12 +23,12 @@ final class OutputAndMetadataTest extends TfpdfTestCase
         $pdf->Output($path, 'F');
         $this->assertFileExists($path);
         $bytes = file_get_contents($path);
-        $this->assertNotFalse($bytes);
+        $this->assertTrue($bytes !== false);
         PdfAssert::assertPdf($bytes);
         @unlink($path);
     }
 
-    public function testOutputCliInlineMode(): void
+    public function testOutputCliInlineMode()
     {
         $pdf = new tFPDF();
         $pdf->AddPage();
@@ -42,35 +40,35 @@ final class OutputAndMetadataTest extends TfpdfTestCase
         PdfAssert::assertPdf($body);
     }
 
-    public function testMetadataUtf8Title(): void
+    public function testMetadataUtf8Title()
     {
         $pdf = new tFPDF();
         $pdf->SetTitle('Γειά', true);
         $pdf->AddPage();
         $bytes = $pdf->Output('S');
-        $this->assertStringContainsString('/Title', $bytes);
-        $this->assertStringContainsString("\xFE\xFF", $bytes);
+        $this->assertContainsString('/Title', $bytes);
+        $this->assertContainsString("\xFE\xFF", $bytes);
     }
 
-    public function testCreationDateUtcOffset(): void
+    public function testCreationDateUtcOffset()
     {
         $pdf = new tFPDF();
         $pdf->AddPage();
         $bytes = $pdf->Output('S');
-        $this->assertMatchesRegularExpression(
+        $this->assertRegExp(
             '/\/CreationDate \(D:\d{14}\+00\'00\'\)/',
             $bytes
         );
     }
 
-    public function testDefaultCompressionFlatesPageStreams(): void
+    public function testDefaultCompressionFlatesPageStreams()
     {
         $bytes = DocumentBuilder::coreOnePager('flate');
-        $this->assertStringContainsString('/Filter /FlateDecode', $bytes);
+        $this->assertContainsString('/Filter /FlateDecode', $bytes);
         PdfAssert::assertContainsInStreams($bytes, '(flate) Tj');
     }
 
-    public function testCompressionDisabledExposesOperatorsInObject(): void
+    public function testCompressionDisabledExposesOperatorsInObject()
     {
         $pdf = new tFPDF();
         $pdf->SetCompression(false);
@@ -79,6 +77,6 @@ final class OutputAndMetadataTest extends TfpdfTestCase
         $pdf->Cell(0, 10, 'plain');
         $bytes = $pdf->Output('S');
         PdfAssert::assertPdf($bytes);
-        $this->assertStringContainsString('(plain) Tj', $bytes);
+        $this->assertContainsString('(plain) Tj', $bytes);
     }
 }

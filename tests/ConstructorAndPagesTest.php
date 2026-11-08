@@ -1,89 +1,87 @@
 <?php
 
-declare(strict_types=1);
-
-final class ConstructorAndPagesTest extends TfpdfTestCase
+class ConstructorAndPagesTest extends TfpdfTestCase
 {
-    public function testA4PortraitDimensionsInMillimetres(): void
+    public function testA4PortraitDimensionsInMillimetres()
     {
         $pdf = new tFPDF('P', 'mm', 'A4');
         $pdf->AddPage();
-        $this->assertEqualsWithDelta(210.0, $pdf->GetPageWidth(), 0.02);
-        $this->assertEqualsWithDelta(297.0, $pdf->GetPageHeight(), 0.02);
+        $this->assertEquals(210.0, $pdf->GetPageWidth(), '', 0.02);
+        $this->assertEquals(297.0, $pdf->GetPageHeight(), '', 0.02);
     }
 
-    public function testA4LandscapeSwapsDimensions(): void
+    public function testA4LandscapeSwapsDimensions()
     {
         $pdf = new tFPDF('L', 'mm', 'A4');
         $pdf->AddPage();
-        $this->assertEqualsWithDelta(297.0, $pdf->GetPageWidth(), 0.02);
+        $this->assertEquals(297.0, $pdf->GetPageWidth(), '', 0.02);
     }
 
-    public function testCustomSizeNormalizesShorterSideFirstForPortrait(): void
+    public function testCustomSizeNormalizesShorterSideFirstForPortrait()
     {
-        $pdf = new tFPDF('P', 'mm', [200, 100]);
+        $pdf = new tFPDF('P', 'mm', array(200, 100));
         $pdf->AddPage();
-        $this->assertEqualsWithDelta(100.0, $pdf->GetPageWidth(), 0.01);
-        $this->assertEqualsWithDelta(200.0, $pdf->GetPageHeight(), 0.01);
+        $this->assertEquals(100.0, $pdf->GetPageWidth(), '', 0.01);
+        $this->assertEquals(200.0, $pdf->GetPageHeight(), '', 0.01);
     }
 
-    public function testCustomSizeLandscape(): void
+    public function testCustomSizeLandscape()
     {
-        $pdf = new tFPDF('L', 'mm', [200, 100]);
+        $pdf = new tFPDF('L', 'mm', array(200, 100));
         $pdf->AddPage();
-        $this->assertEqualsWithDelta(200.0, $pdf->GetPageWidth(), 0.01);
-        $this->assertEqualsWithDelta(100.0, $pdf->GetPageHeight(), 0.01);
+        $this->assertEquals(200.0, $pdf->GetPageWidth(), '', 0.01);
+        $this->assertEquals(100.0, $pdf->GetPageHeight(), '', 0.01);
     }
 
-    public function testDefaultMarginsAfterAddPage(): void
+    public function testDefaultMarginsAfterAddPage()
     {
         $pdf = new tFPDF();
         $pdf->AddPage();
-        $this->assertEqualsWithDelta(10.0, $pdf->GetX(), 0.01);
-        $this->assertEqualsWithDelta(10.0, $pdf->GetY(), 0.01);
+        $this->assertEquals(10.0, $pdf->GetX(), '', 0.01);
+        $this->assertEquals(10.0, $pdf->GetY(), '', 0.01);
     }
 
-    public function testPageRotationMetadata(): void
+    public function testPageRotationMetadata()
     {
         $pdf = new tFPDF();
         $pdf->AddPage('', '', 90);
         $pdf->SetFont('Helvetica', '', 12);
         $pdf->Cell(0, 10, 'rot');
         $bytes = $pdf->Output('S');
-        $this->assertStringContainsString('/Rotate 90', $bytes);
+        $this->assertContainsString('/Rotate 90', $bytes);
     }
 
-    public function testDisplayModeCatalogEntries(): void
+    public function testDisplayModeCatalogEntries()
     {
-        $cases = [
-            ['fullpage', 'default', '/Fit]'],
-            ['fullwidth', 'default', '/FitH'],
-            ['real', 'default', '/XYZ null null 1'],
-            ['default', 'single', '/PageLayout /SinglePage'],
-            ['default', 'continuous', '/PageLayout /OneColumn'],
-            ['default', 'two', '/PageLayout /TwoColumnLeft'],
-        ];
-        foreach ($cases as [$zoom, $layout, $needle]) {
+        $cases = array(
+            array('fullpage', 'default', '/Fit]'),
+            array('fullwidth', 'default', '/FitH'),
+            array('real', 'default', '/XYZ null null 1'),
+            array('default', 'single', '/PageLayout /SinglePage'),
+            array('default', 'continuous', '/PageLayout /OneColumn'),
+            array('default', 'two', '/PageLayout /TwoColumnLeft'),
+        );
+        foreach ($cases as $case) {
             $pdf = new tFPDF();
-            $pdf->SetDisplayMode($zoom, $layout);
+            $pdf->SetDisplayMode($case[0], $case[1]);
             $pdf->AddPage();
             $pdf->SetFont('Helvetica', '', 12);
             $pdf->Cell(0, 10, 'x');
             $bytes = $pdf->Output('S');
-            $this->assertStringContainsString($needle, $bytes, "$zoom/$layout");
+            $this->assertContainsString($case[2], $bytes, $case[0] . '/' . $case[1]);
         }
     }
 
-    public function testNumericZoomInCatalog(): void
+    public function testNumericZoomInCatalog()
     {
         $pdf = new tFPDF();
         $pdf->SetDisplayMode(150);
         $pdf->AddPage();
         $bytes = $pdf->Output('S');
-        $this->assertStringContainsString('/XYZ null null 1.50', $bytes);
+        $this->assertContainsString('/XYZ null null 1.50', $bytes);
     }
 
-    public function testCloseAddsPageWhenNoneExists(): void
+    public function testCloseAddsPageWhenNoneExists()
     {
         $pdf = new tFPDF();
         $bytes = $pdf->Output('S');
@@ -91,23 +89,26 @@ final class ConstructorAndPagesTest extends TfpdfTestCase
         $this->assertSame(1, PdfAssert::pageCount($bytes));
     }
 
-    public function testRootMediaBoxInPoints(): void
+    public function testRootMediaBoxInPoints()
     {
         $pdf = new tFPDF('P', 'mm', 'A4');
         $pdf->AddPage();
         $bytes = $pdf->Output('S');
-        $this->assertStringContainsString('/MediaBox [0 0 595.28 841.89]', $bytes);
+        $this->assertContainsString('/MediaBox [0 0 595.28 841.89]', $bytes);
     }
 
-    public function testOperationsBeforeAddPageThrow(): void
+    public function testOperationsBeforeAddPageThrow()
     {
         $pdf = new tFPDF();
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('No page has been added yet');
-        $pdf->Line(0, 0, 1, 1);
+        try {
+            $pdf->Line(0, 0, 1, 1);
+            $this->fail('Expected exception');
+        } catch (Exception $e) {
+            $this->assertContains('No page has been added yet', $e->getMessage());
+        }
     }
 
-    public function testSetFontBeforeAddPageIsAllowed(): void
+    public function testSetFontBeforeAddPageIsAllowed()
     {
         $pdf = new tFPDF();
         $pdf->SetFont('Helvetica', '', 14);

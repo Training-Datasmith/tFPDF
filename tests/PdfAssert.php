@@ -1,21 +1,17 @@
 <?php
 
-declare(strict_types=1);
-
-use PHPUnit\Framework\Assert;
-
-final class PdfAssert
+class PdfAssert
 {
-    public static function assertPdf(string $bytes): void
+    public static function assertPdf($bytes)
     {
-        Assert::assertStringStartsWith('%PDF-', $bytes, 'PDF header');
-        Assert::assertStringContainsString('xref', $bytes);
-        Assert::assertStringContainsString('startxref', $bytes);
-        Assert::assertStringEndsWith("%%EOF\n", $bytes, 'PDF EOF');
-        Assert::assertStringContainsString('(tFPDF 1.33)', $bytes, 'Producer metadata');
+        PHPUnit_Framework_Assert::assertStringStartsWith('%PDF-', $bytes, 'PDF header');
+        PHPUnit_Framework_Assert::assertContains('xref', $bytes);
+        PHPUnit_Framework_Assert::assertContains('startxref', $bytes);
+        PHPUnit_Framework_Assert::assertStringEndsWith("%%EOF\n", $bytes, 'PDF EOF');
+        PHPUnit_Framework_Assert::assertContains('(tFPDF 1.33)', $bytes, 'Producer metadata');
     }
 
-    public static function pageCount(string $bytes): int
+    public static function pageCount($bytes)
     {
         if (preg_match('/\/Type \/Pages[\s\S]*?\/Count (\d+)/', $bytes, $m)) {
             return (int) $m[1];
@@ -24,14 +20,19 @@ final class PdfAssert
         throw new RuntimeException('Could not parse page count from PDF');
     }
 
-    public static function normalize(string $bytes): string
+    public static function normalize($bytes)
     {
-        return preg_replace('/\/CreationDate \(D:[^)]+\)/', '/CreationDate (D:NORMALIZED)', $bytes) ?? $bytes;
+        $normalized = preg_replace('/\/CreationDate \(D:[^)]+\)/', '/CreationDate (D:NORMALIZED)', $bytes);
+        if ($normalized === null) {
+            return $bytes;
+        }
+
+        return $normalized;
     }
 
-    public static function inflateStreams(string $bytes): string
+    public static function inflateStreams($bytes)
     {
-        $decoded = [];
+        $decoded = array();
         $pos = 0;
         $len = strlen($bytes);
 
@@ -50,7 +51,7 @@ final class PdfAssert
                 break;
             }
             $payload = substr($bytes, $dataStart, $end - $dataStart);
-            if (str_contains($header, '/FlateDecode')) {
+            if (strpos($header, '/FlateDecode') !== false) {
                 $plain = @gzuncompress($payload);
                 if ($plain !== false) {
                     $decoded[] = $plain;
@@ -62,27 +63,13 @@ final class PdfAssert
         return implode("\n", $decoded);
     }
 
-    public static function utf16BeLiteralsToUtf8(string $content): string
-    {
-        $out = '';
-        if (!preg_match_all('/\((?:\\\\.|[^\\\\)])*\)/', $content, $matches)) {
-            return $content;
-        }
-        foreach ($matches[0] as $match) {
-            $inner = substr($match, 1, -1);
-            $inner = stripcslashes($inner);
-            if (str_starts_with($inner, "\xFE\xFF")) {
-                $utf8 = mb_convert_encoding(substr($inner, 2), 'UTF-8', 'UTF-16BE');
-                $out .= $utf8 . "\n";
-            }
-        }
-
-        return $out;
-    }
-
-    public static function assertContainsInStreams(string $pdf, string $needle): void
+    public static function assertContainsInStreams($pdf, $needle)
     {
         $streams = self::inflateStreams($pdf);
-        Assert::assertStringContainsString($needle, $streams, 'Expected content in inflated streams');
+        PHPUnit_Framework_Assert::assertContains(
+            $needle,
+            $streams,
+            'Expected content in inflated streams'
+        );
     }
 }

@@ -1,10 +1,8 @@
 <?php
 
-declare(strict_types=1);
-
-final class LayoutTest extends TfpdfTestCase
+class LayoutTest extends TfpdfTestCase
 {
-    public function testCellLineBreakModesMoveCoordinates(): void
+    public function testCellLineBreakModesMoveCoordinates()
     {
         $pdf = new tFPDF();
         $pdf->AddPage();
@@ -12,14 +10,14 @@ final class LayoutTest extends TfpdfTestCase
         $w = 40.0;
         $h = 8.0;
         $pdf->Cell($w, $h, 'a', 0, 0);
-        $this->assertEqualsWithDelta(10.0 + $w, $pdf->GetX(), 0.01);
+        $this->assertEquals(10.0 + $w, $pdf->GetX(), '', 0.01);
         $y0 = $pdf->GetY();
         $pdf->Cell($w, $h, 'b', 0, 1);
-        $this->assertEqualsWithDelta(10.0, $pdf->GetX(), 0.01);
-        $this->assertEqualsWithDelta($y0 + $h, $pdf->GetY(), 0.01);
+        $this->assertEquals(10.0, $pdf->GetX(), '', 0.01);
+        $this->assertEquals($y0 + $h, $pdf->GetY(), '', 0.01);
     }
 
-    public function testMultiCellStripsCarriageReturns(): void
+    public function testMultiCellStripsCarriageReturns()
     {
         $pdf = new tFPDF();
         $pdf->AddPage();
@@ -30,7 +28,7 @@ final class LayoutTest extends TfpdfTestCase
         PdfAssert::assertContainsInStreams($bytes, '(two)');
     }
 
-    public function testAutomaticPageBreakCreatesSecondPage(): void
+    public function testAutomaticPageBreakCreatesSecondPage()
     {
         $pdf = new tFPDF();
         $pdf->AddPage();
@@ -42,15 +40,9 @@ final class LayoutTest extends TfpdfTestCase
         $this->assertSame(2, PdfAssert::pageCount($bytes));
     }
 
-    public function testHeaderAndFooterOnMultiplePages(): void
+    public function testHeaderAndFooterOnMultiplePages()
     {
-        $pdf = new class extends tFPDF {
-            public function Header(): void
-            {
-                $this->SetFont('Helvetica', '', 10);
-                $this->Cell(0, 8, 'HEADER', 0, 1);
-            }
-        };
+        $pdf = new HeaderFooterPdf();
         $pdf->AddPage();
         $pdf->SetFont('Helvetica', '', 12);
         $pdf->Cell(0, 8, 'body1', 0, 1);
@@ -61,16 +53,9 @@ final class LayoutTest extends TfpdfTestCase
         $this->assertSame(2, substr_count($streams, '(HEADER)'));
     }
 
-    public function testAliasNbPagesReplacedInFooter(): void
+    public function testAliasNbPagesReplacedInFooter()
     {
-        $pdf = new class extends tFPDF {
-            public function Footer(): void
-            {
-                $this->SetY(-15);
-                $this->SetFont('Helvetica', '', 10);
-                $this->Cell(0, 10, 'Pages: {nb}', 0, 0, 'C');
-            }
-        };
+        $pdf = new FooterAliasPdf();
         $pdf->AliasNbPages('{nb}');
         $pdf->AddPage();
         $pdf->SetFont('Helvetica', '', 12);
@@ -79,20 +64,20 @@ final class LayoutTest extends TfpdfTestCase
         $pdf->Cell(0, 8, 'two', 0, 1);
         $bytes = $pdf->Output('S');
         PdfAssert::assertContainsInStreams($bytes, '(Pages: 2)');
-        $this->assertStringNotContainsString('{nb}', PdfAssert::inflateStreams($bytes));
+        $this->assertNotContainsString('{nb}', PdfAssert::inflateStreams($bytes));
     }
 
-    public function testExternalLinkAnnotation(): void
+    public function testExternalLinkAnnotation()
     {
         $pdf = new tFPDF();
         $pdf->AddPage();
         $pdf->SetFont('Helvetica', '', 12);
         $pdf->Link(10, 10, 40, 10, 'https://example.com');
         $bytes = $pdf->Output('S');
-        $this->assertStringContainsString('/URI (https://example.com)', $bytes);
+        $this->assertContainsString('/URI (https://example.com)', $bytes);
     }
 
-    public function testInternalLinkDestination(): void
+    public function testInternalLinkDestination()
     {
         $pdf = new tFPDF();
         $pdf->AddPage();
@@ -101,10 +86,10 @@ final class LayoutTest extends TfpdfTestCase
         $pdf->SetLink($link, 20, 1);
         $pdf->Link(10, 10, 30, 10, $link);
         $bytes = $pdf->Output('S');
-        $this->assertStringContainsString('/Dest ', $bytes);
+        $this->assertContainsString('/Dest ', $bytes);
     }
 
-    public function testNamespacedSubclass(): void
+    public function testNamespacedSubclass()
     {
         $doc = new Test\Pdf\NamespacedDocument();
         $doc->AddPage();
@@ -112,5 +97,24 @@ final class LayoutTest extends TfpdfTestCase
         $doc->Cell(0, 10, 'ns');
         $bytes = $doc->Output('S');
         PdfAssert::assertPdf($bytes);
+    }
+}
+
+class HeaderFooterPdf extends tFPDF
+{
+    public function Header()
+    {
+        $this->SetFont('Helvetica', '', 10);
+        $this->Cell(0, 8, 'HEADER', 0, 1);
+    }
+}
+
+class FooterAliasPdf extends tFPDF
+{
+    public function Footer()
+    {
+        $this->SetY(-15);
+        $this->SetFont('Helvetica', '', 10);
+        $this->Cell(0, 10, 'Pages: {nb}', 0, 0, 'C');
     }
 }
