@@ -69,5 +69,16 @@ class CoreFontTest extends TfpdfTestCase
             substr_count($bytes, '/BaseFont /Helvetica'),
             'Second AddFont for the same core font must not register a duplicate font'
         );
+        PdfAssert::assertContainsInStreams($bytes, '/F1 12.00 Tf');
+        $this->assertContains(
+            "/Font <<\n/F1 ",
+            $bytes,
+            'Helvetica must remain the first registered font resource (/F1)'
+        );
+        $this->assertNotContains(
+            '/F2 ',
+            $bytes,
+            'Repeated AddFont must not advance font numbering for the same core font'
+        );
     }
 }
