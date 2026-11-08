@@ -62,6 +62,12 @@ class CoreFontTest extends TfpdfTestCase
         $pdf->AddFont('helvetica', '', 'helvetica.php', false);
         $pdf->AddPage();
         $pdf->SetFont('helvetica', '', 12);
-        $this->assertTrue(true);
+        $pdf->Cell(0, 10, 'idempotent');
+        $bytes = $pdf->Output('S');
+        $this->assertSame(
+            1,
+            substr_count($bytes, '/BaseFont /Helvetica'),
+            'Second AddFont for the same core font must not register a duplicate font'
+        );
     }
 }
